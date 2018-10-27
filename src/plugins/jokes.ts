@@ -1,5 +1,6 @@
 import { Command, Permission, Plugin } from "bottercak3";
 import fetch from "node-fetch";
+import { Cooldown } from "../cooldown";
 
 interface APIResponse {
   id: string;
@@ -8,6 +9,8 @@ interface APIResponse {
 }
 
 export default class Jokes extends Plugin {
+  private commandCooldown = new Cooldown(10);
+
   public init() {
     this.bot.registerCommand({
       name: "joke",
@@ -17,6 +20,9 @@ export default class Jokes extends Plugin {
   }
 
   public async joke(command: Command) {
+    if (!this.commandCooldown.done) return;
+    this.commandCooldown.restart();
+
     const response = await fetch("https://icanhazdadjoke.com/", {
       headers: {
         "Accept": "application/json"
