@@ -1,6 +1,7 @@
 import { Configuration, plugins, TwitchBot, TwitchJSConnector } from "bottercak3";
 import GitHubPlugin from "./plugins/github";
 import JokesPlugin from "./plugins/jokes";
+import LinkPreviewPlugin from "./plugins/linkpreview";
 
 const config: Partial<Configuration> = {
   username: process.env.TWITCH_USERNAME,
@@ -16,5 +17,6 @@ const bot = new TwitchBot(connector, config);
 bot.loadPlugin(plugins.General);
 bot.loadPlugin(GitHubPlugin);
 bot.loadPlugin(JokesPlugin);
+bot.loadPlugin(LinkPreviewPlugin);
 
 bot.main();

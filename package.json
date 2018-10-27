@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "bottercak3": "../bottercak3",
-    "node-fetch": "^2.2.0"
+    "node-fetch": "^2.2.0",
+    "unescape": "^1.0.1"
   },
   "devDependencies": {
     "@types/node": "^10.12.0",
