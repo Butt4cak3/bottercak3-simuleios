@@ -1,0 +1,9 @@
+/node_modules/
+/dist/
+/yarn-error.log
+/.env
+
+# Hide VSCode configuration except for the launch stuff
+/.vscode/*
+!/.vscode/launch.json
+!/.vscode/tasks.json
