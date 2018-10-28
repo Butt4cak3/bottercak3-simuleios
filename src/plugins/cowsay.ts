@@ -6,9 +6,9 @@ export default class Cowsay extends Plugin {
   private cooldown = new Cooldown(20);
 
   public init() {
-    this.bot.registerCommand({
+    this.registerCommand({
       name: "cowsay",
-      handler: this.cowsay.bind(this),
+      handler: this.cowsay,
       permissionLevel: Permission.EVERYONE
     });
   }

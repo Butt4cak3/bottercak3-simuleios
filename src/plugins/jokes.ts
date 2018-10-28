@@ -12,9 +12,9 @@ export default class Jokes extends Plugin {
   private commandCooldown = new Cooldown(10);
 
   public init() {
-    this.bot.registerCommand({
+    this.registerCommand({
       name: "joke",
-      handler: this.joke.bind(this),
+      handler: this.joke,
       permissionLevel: Permission.EVERYONE
     });
   }

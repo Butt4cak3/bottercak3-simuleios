@@ -8,9 +8,9 @@ export default class LinkPreview extends Plugin {
   private offKeywords = ["0", "no", "off", "disable", "disabled", "false", "n"];
 
   public init() {
-    this.bot.registerCommand({
+    this.registerCommand({
       name: "linkpreview",
-      handler: this.cmdLinkPreview.bind(this),
+      handler: this.cmdLinkPreview,
       permissionLevel: Permission.MODERATOR
     })
     this.bot.onChatMessage.subscribe(this.onChatMessage, this);

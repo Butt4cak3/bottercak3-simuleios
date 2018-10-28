@@ -56,7 +56,7 @@ export default class GitHub extends Plugin {
   }
 
   public init() {
-    this.bot.onChatMessage.subscribe(this.onChatMessage.bind(this));
+    this.bot.onChatMessage.subscribe(this.onChatMessage, this);
   }
 
   private async onChatMessage(message: ChatMessage) {
