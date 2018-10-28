@@ -1,7 +1,10 @@
 import { Plugin, Permission, Command } from "bottercak3";
 import cowsay from "cowsay";
+import { Cooldown } from "../cooldown";
 
 export default class Cowsay extends Plugin {
+  private cooldown = new Cooldown(20);
+
   public init() {
     this.bot.registerCommand({
       name: "cowsay",
@@ -11,6 +14,9 @@ export default class Cowsay extends Plugin {
   }
 
   private cowsay(command: Command) {
+    if (!this.cooldown.done) return;
+    this.cooldown.restart();
+
     const raw = cowsay.say({
       text: command.params.join(" ")
     });
