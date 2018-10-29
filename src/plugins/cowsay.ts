@@ -28,6 +28,9 @@ export default class Cowsay extends Plugin {
 
   private cowsay(command: Command) {
     if (!this.cooldown.done && !command.sender.hasPermission(Permission.BROADCASTER)) return;
+
+    if (command.params.length < 1) return;
+
     this.cooldown.restart();
 
     const raw = cowsay.say({
