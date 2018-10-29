@@ -2,10 +2,23 @@ import { Plugin, Permission, Command } from "bottercak3";
 import cowsay from "cowsay";
 import { Cooldown } from "../cooldown";
 
+interface Config {
+  cooldown: number;
+}
+
 export default class Cowsay extends Plugin {
+  protected config: Config = this.getDefaultConfiguration();
   private cooldown = new Cooldown(20);
 
+  public getDefaultConfiguration(): Config {
+    return {
+      cooldown: 20
+    };
+  }
+
   public init() {
+    this.cooldown = new Cooldown(this.config.cooldown);
+
     this.registerCommand({
       name: "cowsay",
       handler: this.cowsay,
