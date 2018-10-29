@@ -2,10 +2,20 @@ import { ChatMessage, Command, Permission, Plugin } from "bottercak3";
 import fetch from "node-fetch";
 import unescape from "unescape";
 
+interface Config {
+  enabled: boolean;
+}
+
 export default class LinkPreview extends Plugin {
-  private enabled: boolean = true;
   private onKeywords = ["1", "yes", "on", "enable", "enabled", "true", "y"];
   private offKeywords = ["0", "no", "off", "disable", "disabled", "false", "n"];
+  protected config: Config = this.getDefaultConfiguration();
+
+  public getDefaultConfiguration(): Config {
+    return {
+      enabled: true
+    };
+  }
 
   public init() {
     this.registerCommand({
@@ -18,16 +28,16 @@ export default class LinkPreview extends Plugin {
 
   private cmdLinkPreview(command: Command) {
     if (command.params.length < 1) {
-      this.bot.say(command.channel, `@${command.sender.displayName} Try ${this.bot.config.commandPrefix}linkpreview on/off`);
+      this.bot.say(command.channel, `@${command.sender.displayName} Try ${this.bot.commandPrefix}linkpreview on/off`);
       return;
     }
 
     const newState = command.params[0];
     if (this.onKeywords.indexOf(newState) !== -1) {
-      this.enabled = true;
+      this.config.enabled = true;
       this.bot.say(command.channel, "Link previews are now on.");
     } else if (this.offKeywords.indexOf(newState) !== -1) {
-      this.enabled = false;
+      this.config.enabled = false;
       this.bot.say(command.channel, "Link previews are now off.");
     } else {
       const keywordList = this.onKeywords.concat(this.offKeywords).join(", ");
@@ -37,7 +47,7 @@ export default class LinkPreview extends Plugin {
   }
 
   private async onChatMessage(message: ChatMessage) {
-    if (!this.enabled) return;
+    if (!this.config.enabled) return;
 
     const re = /https?:\/\/\S+/g;
     const urls = message.text.match(re);

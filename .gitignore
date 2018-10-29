@@ -2,6 +2,7 @@
 /dist/
 /yarn-error.log
 /.env
+/config.yml
 
 # Hide VSCode configuration except for the launch stuff
 /.vscode/*
