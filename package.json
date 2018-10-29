@@ -13,6 +13,7 @@
     "cowsay": "^1.3.1",
     "js-yaml": "^3.12.0",
     "node-fetch": "^2.2.0",
+    "solvethis": "^0.1.0",
     "unescape": "^1.0.1"
   },
   "devDependencies": {

@@ -5,6 +5,7 @@ import CowsayPlugin from "./plugins/cowsay";
 import GitHubPlugin from "./plugins/github";
 import JokesPlugin from "./plugins/jokes";
 import LinkPreviewPlugin from "./plugins/linkpreview";
+import MathPlugin from "./plugins/math";
 
 const configFileName = "config.yml";
 
@@ -38,6 +39,7 @@ bot.loadPlugin(GitHubPlugin);
 bot.loadPlugin(JokesPlugin);
 bot.loadPlugin(LinkPreviewPlugin);
 bot.loadPlugin(CowsayPlugin);
+bot.loadPlugin(MathPlugin);
 
 // Write the new config back into the file
 fs.writeFileSync(configFileName, yaml.dump(bot.getConfiguration()));
