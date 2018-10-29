@@ -20,7 +20,7 @@ export default class Jokes extends Plugin {
   }
 
   public async joke(command: Command) {
-    if (!this.commandCooldown.done) return;
+    if (!this.commandCooldown.done && !command.sender.hasPermission(Permission.BROADCASTER)) return;
     this.commandCooldown.restart();
 
     const response = await fetch("https://icanhazdadjoke.com/", {
