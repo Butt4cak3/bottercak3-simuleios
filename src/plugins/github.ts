@@ -96,7 +96,9 @@ export default class GitHub extends Plugin {
       }
     }`;
 
-    const result = await this.runQuery(query) as IssueResponse & PullRequestResponse;
+    const result = await this.runQuery(query) as (IssueResponse & PullRequestResponse) | null;
+
+    if (result == null) return null;
 
     return result.data.repository[typeString];
   }
@@ -115,7 +117,9 @@ export default class GitHub extends Plugin {
       }
     }`;
 
-    const result = await this.runQuery(query) as IssueTypeResponse;
+    const result = await this.runQuery(query) as IssueTypeResponse | null;
+
+    if (result == null) return null;
 
     const typeName = result.data.repository.issueOrPullRequest.__typename;
 
