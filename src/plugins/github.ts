@@ -48,6 +48,10 @@ export default class GitHub extends Plugin {
     buttercak3: {
       owner: "algorithm-archivists",
       name: "algorithm-archive"
+    },
+    simuleios: {
+      owner: "algorithm-archivists",
+      name: "algorithm-archive"
     }
   };
 
