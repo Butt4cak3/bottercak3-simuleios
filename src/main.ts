@@ -20,14 +20,14 @@ const configString = fs.readFileSync(configFileName, { encoding: "utf-8" });
 // Merge the loaded configuration with the default configuration
 const config: Configuration = {
   ...defaultConfig,
-  ...yaml.load(configString)
+  ...yaml.load(configString),
 };
 
 // Create a new connector that delegates the connection to Twitch to a third-party library
 const connector = new TwitchJSConnector({
-  username: config.username,
+  channels: [...config.channels],
   password: process.env.TWITCH_OAUTH_TOKEN || "",
-  channels: [...config.channels]
+  username: config.username,
 });
 
 // Start up the bot

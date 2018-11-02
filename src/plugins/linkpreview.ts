@@ -7,22 +7,22 @@ interface Config {
 }
 
 export default class LinkPreview extends Plugin {
+  protected config: Config = this.getDefaultConfiguration();
   private onKeywords = ["1", "yes", "on", "enable", "enabled", "true", "y"];
   private offKeywords = ["0", "no", "off", "disable", "disabled", "false", "n"];
-  protected config: Config = this.getDefaultConfiguration();
 
   public getDefaultConfiguration(): Config {
     return {
-      enabled: true
+      enabled: true,
     };
   }
 
   public init() {
     this.registerCommand({
-      name: "linkpreview",
       handler: this.cmdLinkPreview,
-      permissionLevel: Permission.MODERATOR
-    })
+      name: "linkpreview",
+      permissionLevel: Permission.MODERATOR,
+    });
     this.bot.onChatMessage.subscribe(this.onChatMessage, this);
   }
 
@@ -73,7 +73,7 @@ export default class LinkPreview extends Plugin {
     const text = await response.text();
 
     // Don't do this at home! Parsing HTML with regular expressions is bad.
-    // See https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags/1732454#1732454
+    // See: https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags/1732454#1732454
     const re = /<\s*title[^>]*>([^<]+)<\s*\/\s*title\s*>/i;
 
     const match = re.exec(text);

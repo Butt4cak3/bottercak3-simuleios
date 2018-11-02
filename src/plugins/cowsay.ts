@@ -1,4 +1,4 @@
-import { Plugin, Permission, Command } from "bottercak3";
+import { Command, Permission, Plugin } from "bottercak3";
 import cowsay from "cowsay";
 import { Cooldown } from "../cooldown";
 
@@ -12,7 +12,7 @@ export default class Cowsay extends Plugin {
 
   public getDefaultConfiguration(): Config {
     return {
-      cooldown: 20
+      cooldown: 20,
     };
   }
 
@@ -20,9 +20,9 @@ export default class Cowsay extends Plugin {
     this.cooldown = new Cooldown(this.config.cooldown);
 
     this.registerCommand({
-      name: "cowsay",
       handler: this.cowsay,
-      permissionLevel: Permission.EVERYONE
+      name: "cowsay",
+      permissionLevel: Permission.EVERYONE,
     });
   }
 
@@ -34,7 +34,7 @@ export default class Cowsay extends Plugin {
     this.cooldown.restart();
 
     const raw = cowsay.say({
-      text: command.params.join(" ")
+      text: command.params.join(" "),
     });
     const lines = raw.split("\n");
 

@@ -13,20 +13,21 @@ export default class Jokes extends Plugin {
 
   public init() {
     this.registerCommand({
-      name: "joke",
       handler: this.joke,
-      permissionLevel: Permission.EVERYONE
+      name: "joke",
+      permissionLevel: Permission.EVERYONE,
     });
   }
 
   public async joke(command: Command) {
     if (!this.commandCooldown.done && !command.sender.hasPermission(Permission.BROADCASTER)) return;
+
     this.commandCooldown.restart();
 
     const response = await fetch("https://icanhazdadjoke.com/", {
       headers: {
-        "Accept": "application/json"
-      }
+        Accept: "application/json",
+      },
     });
     const joke = await response.json() as APIResponse;
 

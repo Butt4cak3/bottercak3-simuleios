@@ -40,19 +40,19 @@ interface PullRequestResponse {
 
 enum IssueType {
   ISSUE,
-  PULL_REQUEST
+  PULL_REQUEST,
 }
 
 export default class GitHub extends Plugin {
   private repos: Dict<RepoConfig> = {
     buttercak3: {
+      name: "algorithm-archive",
       owner: "algorithm-archivists",
-      name: "algorithm-archive"
     },
     simuleios: {
+      name: "algorithm-archive",
       owner: "algorithm-archivists",
-      name: "algorithm-archive"
-    }
+    },
   };
 
   private get apiKey() {
@@ -66,14 +66,16 @@ export default class GitHub extends Plugin {
   private async onChatMessage(message: ChatMessage) {
     const re = /#(\d+)/g;
 
-    let match: RegExpExecArray | null = null;
+    let match = re.exec(message.text);
 
-    while ((match = re.exec(message.text)) != null) {
-      const issueNumber = parseInt(match[1]);
+    while (match != null) {
+      const issueNumber = parseInt(match[1], 10);
       const issue = await this.getIssueData(message.channel, issueNumber);
       if (issue == null) return;
 
       this.bot.say(message.channel, `${issue.title}: ${issue.url}`);
+
+      match = re.exec(message.text);
     }
   }
 
@@ -140,20 +142,20 @@ export default class GitHub extends Plugin {
     const apiKey = this.apiKey;
 
     const headers = {
-      "Authorization": `Bearer ${apiKey}`
+      Authorization: `Bearer ${apiKey}`,
     };
 
     const body = JSON.stringify({ query });
 
     const response = await fetch("https://api.github.com/graphql", {
-      method: "POST",
+      body,
       headers,
-      body
+      method: "POST",
     });
 
     if (response.status === 200) {
       try {
-        return await response.json()
+        return await response.json();
       } catch (_e) {
         return null;
       }

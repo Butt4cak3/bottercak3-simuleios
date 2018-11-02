@@ -1,12 +1,12 @@
-import { Plugin, Permission, Command } from "bottercak3";
+import { Command, Permission, Plugin } from "bottercak3";
 import { Formula } from "solvethis";
 
 export default class MathPlugin extends Plugin {
   public init() {
     this.registerCommand({
-      name: "whats",
       handler: this.whats,
-      permissionLevel: Permission.EVERYONE
+      name: "whats",
+      permissionLevel: Permission.EVERYONE,
     });
   }
 
