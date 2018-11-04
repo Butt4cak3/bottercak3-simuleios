@@ -52,12 +52,14 @@ export default class Dice extends Plugin {
       return;
     }
 
+    const total = results.reduce((roll, sum) => sum + roll, 0);
+
     for (let i = 0; i < parsed.amount; i++) {
       results.push(randomInt(1, parsed.type));
     }
 
     const formatted = results.join(", ");
-    this.bot.say(command.channel, `${command.sender.displayName} rolled ${formatted}.`);
+    this.bot.say(command.channel, `${command.sender.displayName} rolled ${total} (${formatted}).`);
   }
 
   private parse(str: string) {
