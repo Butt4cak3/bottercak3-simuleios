@@ -109,7 +109,7 @@ export default class Dice extends Plugin {
   }
 
   private parse(str: string): Roll | null {
-    const re = /(\d+)?d(\d+)/;
+    const re = /^(\d+)?d(\d+)$/;
     const match = str.match(re);
 
     if (match == null) return null;
