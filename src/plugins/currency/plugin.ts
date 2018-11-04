@@ -173,7 +173,7 @@ export default class CurrencyPlugin extends Plugin {
 
     if (this.subtractAmount(recipient, command.channel, amount)) {
       const formatted = this.currency.format(amount);
-      this.bot.say(command.channel, `@${command.sender.displayName} ${recipient} now has ${formatted}.`);
+      this.bot.say(command.channel, `@${command.sender.displayName} You took ${formatted} from ${recipient}.`);
     } else {
       this.bot.say(command.channel, `@${command.sender.displayName} ${command.params[2]} is not a valid amount.`);
     }
