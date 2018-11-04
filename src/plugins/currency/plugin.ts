@@ -1,10 +1,13 @@
 import Database from "better-sqlite3";
-import { Command, Event, Permission, Plugin, TwitchBot } from "bottercak3";
+import { ChatMessage, Command, Event, Permission, Plugin, TwitchBot } from "bottercak3";
 import fs from "fs";
 import Currency from "./currency";
 
 interface Configuration {
   decimals: number;
+  payoutInterval: number;
+  payoutAmount: number;
+  payoutTimeout: number;
 }
 
 interface BalanceChange {
@@ -22,6 +25,8 @@ export default class CurrencyPlugin extends Plugin {
 
   protected config: Configuration = this.getDefaultConfiguration();
 
+  private readonly chatters: Dict<Dict<Date>> = Object.create(null);
+  private interval: NodeJS.Timeout | null = null;
   private readonly db: Database;
   private _currency = new Currency("Credit", "Credits", this.config.decimals);
 
@@ -38,6 +43,9 @@ export default class CurrencyPlugin extends Plugin {
   public getDefaultConfiguration(): Configuration {
     return {
       decimals: 2,
+      payoutAmount: 100,
+      payoutInterval: 10,
+      payoutTimeout: 30,
     };
   }
 
@@ -49,6 +57,16 @@ export default class CurrencyPlugin extends Plugin {
       name: "credits",
       permissionLevel: Permission.EVERYONE,
     });
+
+    this.bot.onChatMessage.subscribe(this.onChatMessage, this);
+
+    this.interval = setInterval(() => this.distributeCredits(), this.config.payoutInterval * 1000 * 60);
+  }
+
+  public deinit() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
   }
 
   public hasAccount(username: string, channel: string) {
@@ -238,6 +256,37 @@ export default class CurrencyPlugin extends Plugin {
       this.bot.say(channel, `@${sender.displayName} You gave ${formatted} to ${recipient}`);
     } else {
       this.bot.say(channel, `@${sender.displayName} ${command.params[2]} is not a valid amount.`);
+    }
+  }
+
+  private onChatMessage(message: ChatMessage) {
+    const channel = message.channel;
+    const sender = message.sender;
+    const now = new Date();
+
+    if (this.chatters[channel] == null) {
+      this.chatters[channel] = Object.create(null);
+    }
+
+    this.chatters[channel][sender.name] = now;
+  }
+
+  private distributeCredits() {
+    const now = new Date().getTime();
+    const threshold = now - this.config.payoutTimeout * 1000 * 60;
+
+    for (const channelname of Object.keys(this.chatters)) {
+      const channel = this.chatters[channelname];
+
+      for (const username of Object.keys(channel)) {
+        const lastMessage = channel[username];
+
+        if (lastMessage.getTime() < threshold) {
+          delete channel[username];
+        } else {
+          this.addAmount(username, channelname, this.config.payoutAmount);
+        }
+      }
     }
   }
 }
