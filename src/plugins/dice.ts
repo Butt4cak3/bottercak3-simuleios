@@ -1,4 +1,5 @@
 import { Command, Permission, Plugin, User } from "bottercak3";
+import CurrencyPlugin from "./currency/plugin";
 
 function randomInt(min: number, max: number) {
   return Math.floor(min + Math.random() * (max - min + 1));
@@ -7,6 +8,7 @@ function randomInt(min: number, max: number) {
 interface Configuration {
   maxRolls: number;
   maxSides: number;
+  duelTimeout: number;
 }
 
 interface Roll {
@@ -24,16 +26,24 @@ interface Duel {
 
 export default class Dice extends Plugin {
   protected config: Configuration = this.getDefaultConfiguration();
-  private currentDuel: Duel | null = null;
+  private currencyPlugin: CurrencyPlugin | null = null;
+  private duels = new Set<Duel>();
 
   public getDefaultConfiguration(): Configuration {
     return {
+      duelTimeout: 60,
       maxRolls: 20,
       maxSides: 120,
     };
   }
 
   public init() {
+    this.bot.waitForPlugin("CurrencyPlugin").then((currencyPlugin) => {
+      if (currencyPlugin instanceof CurrencyPlugin) {
+        this.currencyPlugin = currencyPlugin;
+      }
+    });
+
     this.registerCommand({
       handler: this.cmdRoll,
       name: "roll",
@@ -49,6 +59,12 @@ export default class Dice extends Plugin {
     this.registerCommand({
       handler: this.cmdAccept,
       name: "accept",
+      permissionLevel: Permission.EVERYONE,
+    });
+
+    this.registerCommand({
+      handler: this.cmdDecline,
+      name: "decline",
       permissionLevel: Permission.EVERYONE,
     });
   }
@@ -78,12 +94,12 @@ export default class Dice extends Plugin {
       return;
     }
 
-    if (roll.amount > this.config.maxRolls) {
+    if (roll.amount < 1 || roll.amount > this.config.maxRolls) {
       this.bot.say(command.channel, `@${command.sender.displayName} You can only roll ${this.config.maxRolls} dice at once.`);
       return;
     }
 
-    if (roll.sides > this.config.maxSides) {
+    if (roll.sides < 2 || roll.sides > this.config.maxSides) {
       this.bot.say(command.channel, `@${command.sender.displayName} You can only roll dice with up to ${this.config.maxSides} sides.`);
       return;
     }
@@ -106,48 +122,103 @@ export default class Dice extends Plugin {
     };
   }
 
+  private inDuel(username: string, channel: string) {
+    return this.getDuel(username, channel) !== null;
+  }
+
+  private getDuel(username: string, channel: string) {
+    username = username.toLowerCase();
+    channel = channel.toLowerCase();
+
+    for (const duel of this.duels) {
+      if (duel.channel === channel && (duel.challenger.name === username || duel.opponent === username)) {
+        return duel;
+      }
+    }
+
+    return null;
+  }
+
   private cmdDuel(command: Command) {
     if (command.params.length < 3) {
       return;
     }
 
-    if (this.currentDuel != null) {
-      const challenger = this.currentDuel.challenger.displayName;
-      const opponent = this.currentDuel.opponent;
-
-      this.bot.say(command.channel, `@${command.sender.displayName} There is already a duel running between ${challenger} and ${opponent}.`);
-      return;
-    }
-
     const channel = command.channel;
     const challenger = command.sender;
-    const opponent = command.params[0];
+    const opponent = command.params[0].startsWith("@")
+      ? command.params[0].slice(1).toLowerCase()
+      : command.params[0].toLowerCase();
+
     const roll = this.parse(command.params[1]);
     const stake = parseFloat(command.params[2]);
 
-    if (roll == null) {
-      this.bot.say(command.channel, `@${challenger.displayName} ${command.params[1]} is not a valid dice roll.`);
+    if (this.inDuel(challenger.name, channel)) {
+      this.bot.say(channel, `@${challenger.displayName} You already are in a duel.`);
       return;
     }
 
-    this.currentDuel = {
+    if (stake < 0 || !isFinite(stake)) {
+      this.bot.say(channel, `@${challenger.displayName} You have to challenge for a positive number.`);
+      return;
+    }
+
+    if (opponent === challenger.name) {
+      this.bot.say(channel, `@${challenger.displayName} you can't duel yourself.`);
+      return;
+    }
+
+    if (roll == null) {
+      this.bot.say(channel, `@${challenger.displayName} ${command.params[1]} is not a valid dice roll.`);
+      return;
+    }
+
+    if (this.currencyPlugin != null) {
+      const balance = this.currencyPlugin.getBalance(challenger.name, channel);
+      if (balance < stake) {
+        this.bot.say(channel, `@${challenger.displayName} You don't have enough ${this.currencyPlugin.currency.pluralName} for that.`);
+        return;
+      }
+    }
+
+    const duel = {
       challenger,
       channel,
       opponent,
       roll,
       stake,
     };
+
+    this.duels.add(duel);
+
+    this.bot.say(channel, `${challenger.displayName} challenged ${opponent} to a duel. Type ${this.bot.commandPrefix}accept or ${this.bot.commandPrefix}decline.`);
+
+    setTimeout(() => {
+      if (!this.duels.has(duel)) return;
+
+      this.bot.say(duel.channel, `The duel between ${challenger.displayName} and ${opponent} timed out.`);
+      this.duels.delete(duel);
+    }, this.config.duelTimeout * 1000);
   }
 
   private cmdAccept(command: Command) {
-    const duel = this.currentDuel;
+    const duel = this.getDuel(command.sender.name, command.channel);
 
-    if (duel == null || command.channel !== duel.channel || command.sender.name !== duel.opponent) {
+    if (duel == null) {
       return;
     }
 
+    const channel = command.channel;
     const challenger = duel.challenger;
     const opponent = command.sender;
+
+    if (this.currencyPlugin != null) {
+      const balance = this.currencyPlugin.getBalance(opponent.name, channel);
+
+      if (balance < duel.stake) {
+        this.bot.say(channel, `@${challenger.displayName} You don't have enough ${this.currencyPlugin.currency.pluralName} to accept.`);
+      }
+    }
 
     const challengerResult = this.roll(duel.roll);
     const opponentResult = this.roll(duel.roll);
@@ -170,12 +241,28 @@ export default class Dice extends Plugin {
     }
 
     if (winner != null && loser != null) {
-      this.bot.say(duel.channel, `${winner.displayName} won!`);
+      if (this.currencyPlugin != null) {
+        this.currencyPlugin.transfer(loser.name, winner.name, duel.channel, duel.stake);
+        const formatted = this.currencyPlugin.currency.format(duel.stake);
+        this.bot.say(duel.channel, `${winner.displayName} won ${formatted}!`);
+      } else {
+        this.bot.say(duel.channel, `${winner.displayName} won!`);
+      }
     } else {
       this.bot.say(duel.channel, "It's a draw.");
+    }
+
+    this.duels.delete(duel);
+  }
+
+  private cmdDecline(command: Command) {
+    const duel = this.getDuel(command.sender.name, command.channel);
+
+    if (duel == null) {
       return;
     }
 
-    this.currentDuel = null;
+    this.duels.delete(duel);
+    this.bot.say(command.channel, `${command.sender.displayName} declined the duel.`);
   }
 }

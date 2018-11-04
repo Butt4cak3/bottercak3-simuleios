@@ -55,7 +55,7 @@ export default class CurrencyPlugin extends Plugin {
   }
 
   public setBalance(username: string, channel: string, balance: number) {
-    if (isNaN(balance)) return false;
+    if (!isFinite(balance)) return false;
 
     username = username.toLowerCase();
     const oldAmount = this.getBalance(username, channel);
