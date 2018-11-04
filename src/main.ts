@@ -1,4 +1,5 @@
 import { Configuration, defaultConfig, plugins, TwitchBot, TwitchJSConnector } from "bottercak3";
+import dotenv from "dotenv";
 import fs from "fs";
 import yaml from "js-yaml";
 import CowsayPlugin from "./plugins/cowsay";
@@ -8,6 +9,8 @@ import GitHubPlugin from "./plugins/github";
 import JokesPlugin from "./plugins/jokes";
 import LinkPreviewPlugin from "./plugins/linkpreview";
 import MathPlugin from "./plugins/math";
+
+dotenv.config();
 
 const configFileName = "config.yml";
 
