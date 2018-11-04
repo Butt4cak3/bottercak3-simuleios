@@ -3,6 +3,10 @@ import { Command, Event, Permission, Plugin, TwitchBot } from "bottercak3";
 import fs from "fs";
 import Currency from "./currency";
 
+interface Configuration {
+  decimals: number;
+}
+
 interface BalanceChange {
   username: string;
   oldAmount: number;
@@ -16,8 +20,10 @@ export default class CurrencyPlugin extends Plugin {
 
   public readonly onBalanceChanged = new Event<BalanceChange>();
 
+  protected config: Configuration = this.getDefaultConfiguration();
+
   private readonly db: Database;
-  private _currency = new Currency("Credit", "Credits");
+  private _currency = new Currency("Credit", "Credits", this.config.decimals);
 
   public constructor(bot: TwitchBot, name: string) {
     super(bot, name);
@@ -29,6 +35,12 @@ export default class CurrencyPlugin extends Plugin {
     this.db = new Database("data/currency.db");
   }
 
+  public getDefaultConfiguration(): Configuration {
+    return {
+      decimals: 2,
+    };
+  }
+
   public init() {
     this.setupDatabase();
 
@@ -37,6 +49,14 @@ export default class CurrencyPlugin extends Plugin {
       name: "credits",
       permissionLevel: Permission.EVERYONE,
     });
+  }
+
+  public hasAccount(username: string, channel: string) {
+    username = username.toLowerCase();
+    channel = channel.toLowerCase();
+    const row = this.db.prepare("SELECT * FROM accounts WHERE username = ? AND channel = ?").get(username, channel);
+
+    return row != null;
   }
 
   public getBalance(username: string, channel: string): number {
@@ -51,12 +71,13 @@ export default class CurrencyPlugin extends Plugin {
       return 0;
     }
 
-    return row.balance;
+    return this.currency.round(row.balance);
   }
 
   public setBalance(username: string, channel: string, balance: number) {
     if (!isFinite(balance)) return false;
 
+    balance = this.currency.round(balance);
     username = username.toLowerCase();
     const oldAmount = this.getBalance(username, channel);
 
@@ -73,6 +94,7 @@ export default class CurrencyPlugin extends Plugin {
   }
 
   public addAmount(recipient: string, channel: string, amount: number) {
+    amount = this.currency.round(amount);
     const balance = this.getBalance(recipient, channel);
     const newBalance = balance + amount;
 
@@ -136,7 +158,10 @@ export default class CurrencyPlugin extends Plugin {
       return;
     }
 
-    const recipient = command.params[1];
+    const recipient = command.params[1].startsWith("@")
+      ? command.params[1].slice(1)
+      : command.params[1];
+
     const newAmount = parseFloat(command.params[2]);
 
     if (this.setBalance(recipient, command.channel, newAmount)) {
@@ -152,7 +177,10 @@ export default class CurrencyPlugin extends Plugin {
       return;
     }
 
-    const recipient = command.params[1];
+    const recipient = command.params[1].startsWith("@")
+      ? command.params[1].slice(1)
+      : command.params[1];
+
     const amount = parseFloat(command.params[2]);
 
     if (this.addAmount(recipient, command.channel, amount)) {
@@ -168,7 +196,10 @@ export default class CurrencyPlugin extends Plugin {
       return;
     }
 
-    const recipient = command.params[1];
+    const recipient = command.params[1].startsWith("@")
+      ? command.params[1].slice(1)
+      : command.params[1];
+
     const amount = parseFloat(command.params[2]);
 
     if (this.subtractAmount(recipient, command.channel, amount)) {
@@ -186,8 +217,16 @@ export default class CurrencyPlugin extends Plugin {
 
     const channel = command.channel;
     const sender = command.sender;
-    const recipient = command.params[1];
-    const amount = parseFloat(command.params[2]);
+    const recipient = command.params[1].startsWith("@")
+      ? command.params[1].slice(1)
+      : command.params[1];
+
+    const amount = Math.abs(parseFloat(command.params[2]));
+
+    if (!this.hasAccount(recipient, channel)) {
+      this.bot.say(command.channel, `@${sender.displayName} I don't know the user ${recipient}.`);
+      return;
+    }
 
     if (amount > this.getBalance(sender.name, channel)) {
       this.bot.say(command.channel, `@${sender.displayName} You don't have enough for that.`);

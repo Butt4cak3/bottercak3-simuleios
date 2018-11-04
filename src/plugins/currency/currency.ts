@@ -1,10 +1,12 @@
 export default class Currency {
   public readonly singularName: string;
   public readonly pluralName: string;
+  public readonly decimals: number;
 
-  public constructor(singularName: string, pluralName: string) {
+  public constructor(singularName: string, pluralName: string, decimals: number) {
     this.singularName = singularName;
     this.pluralName = pluralName;
+    this.decimals = decimals;
   }
 
   public format(amount: number) {
@@ -13,5 +15,9 @@ export default class Currency {
     } else {
       return `${amount} ${this.pluralName}`;
     }
+  }
+
+  public round(amount: number) {
+    return Math.floor(amount * Math.pow(10, this.decimals)) / Math.pow(10, this.decimals);
   }
 }

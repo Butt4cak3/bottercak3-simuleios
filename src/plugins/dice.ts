@@ -81,6 +81,14 @@ export default class Dice extends Plugin {
     return { total, results };
   }
 
+  public isValidRoll(roll: Roll | null): roll is Roll {
+    return roll != null
+      && roll.amount >= 1 &&
+      roll.amount <= this.config.maxRolls &&
+      roll.sides >= 2 &&
+      roll.sides <= this.config.maxSides;
+  }
+
   private cmdRoll(command: Command) {
     if (command.params.length === 0) {
       command.params = ["1d6"];
@@ -89,18 +97,8 @@ export default class Dice extends Plugin {
     const def = command.params[0];
     const roll = this.parse(def);
 
-    if (roll == null) {
+    if (!this.isValidRoll(roll)) {
       this.bot.say(command.channel, `@${command.sender.displayName} ${def} is not a valid dice roll.`);
-      return;
-    }
-
-    if (roll.amount < 1 || roll.amount > this.config.maxRolls) {
-      this.bot.say(command.channel, `@${command.sender.displayName} You can only roll ${this.config.maxRolls} dice at once.`);
-      return;
-    }
-
-    if (roll.sides < 2 || roll.sides > this.config.maxSides) {
-      this.bot.say(command.channel, `@${command.sender.displayName} You can only roll dice with up to ${this.config.maxSides} sides.`);
       return;
     }
 
@@ -168,7 +166,7 @@ export default class Dice extends Plugin {
       return;
     }
 
-    if (roll == null) {
+    if (!this.isValidRoll(roll)) {
       this.bot.say(channel, `@${challenger.displayName} ${command.params[1]} is not a valid dice roll.`);
       return;
     }
