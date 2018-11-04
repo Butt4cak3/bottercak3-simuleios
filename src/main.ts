@@ -3,11 +3,11 @@ import fs from "fs";
 import yaml from "js-yaml";
 import CowsayPlugin from "./plugins/cowsay";
 import CurrencyPlugin from "./plugins/currency/plugin";
+import Dice from "./plugins/dice";
 import GitHubPlugin from "./plugins/github";
 import JokesPlugin from "./plugins/jokes";
 import LinkPreviewPlugin from "./plugins/linkpreview";
 import MathPlugin from "./plugins/math";
-import Dice from "./plugins/dice";
 
 const configFileName = "config.yml";
 
